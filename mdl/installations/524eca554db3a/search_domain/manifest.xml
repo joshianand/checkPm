@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<install method="install" version="1.0.0">
+ <moduleName>Search domain</moduleName>
+ <moduleFolderName>search_domain</moduleFolderName>
+ <author>Pronab Saha</author>
+ <creationDate>October 4,2013</creationDate>
+ <authorEmail>pranab.su@gmail.com</authorEmail>
+ <authorContact>+8801711982980</authorContact>
+ <copyright>Copyright Software Development Pro(C) 2013</copyright>
+ <license>Software Development Pro</license>
+ <module name="Search domain">
+  <sub name="Domain search" controller="domain" function="index"/>
+ </module>
+</install>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<!--[if IE 8]> <html lang="en" class="ie8"> <![endif]-->
+<!--[if IE 9]> <html lang="en" class="ie9"> <![endif]-->
+<!--[if !IE]><!--> <html lang="en"> <!--<![endif]-->
+    <!-- BEGIN HEAD -->
+    <head>
+        <meta charset="utf-8" />
+        <title>Application name</title>
+
+        <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+        <meta content="" name="description" />
+        <meta content="Pronab Saha" name="author" />
+
+        <script type="text/javascript">
+            var base = '<?php echo base_url(); ?>';
+        </script>
+
+
+        <link href="<?php echo base_url(); ?>assets/bootstrap/css/bootstrap.css" type="text/css" rel="stylesheet" />
+        <link href="<?php echo base_url(); ?>assets/bootstrap/css/bootstrap-responsive.min.css" type="text/css" rel="stylesheet" />
+        <link href="<?php echo base_url(); ?>assets/css/metro.css" type="text/css" rel="stylesheet" />
+        <link href="<?php echo base_url(); ?>assets/font-awesome/css/font-awesome.css" type="text/css" rel="stylesheet" />
+        <link href="<?php echo base_url(); ?>assets/css/style.css" type="text/css" rel="stylesheet" />
+        
+        <link href="<?php echo base_url(); ?>assets/css/style_responsive.css" type="text/css" rel="stylesheet" />
+        <link href="<?php echo base_url(); ?>assets/css/style_default.css" rel="stylesheet" type="text/css" id="style_color" />
+        <link href="<?php echo base_url(); ?>assets/css/style_blue.css" type="text/css" rel="stylesheet" />
+        <link href="<?php echo base_url(); ?>assets/gritter/css/jquery.gritter.css" rel="stylesheet" type="text/css" />
+        <link href="<?php echo base_url(); ?>assets/uniform/css/uniform.default.css" rel="stylesheet" type="text/css" />
+        <link href="<?php echo base_url(); ?>assets/kendo/styles/kendo.common.min.css" rel="stylesheet" type="text/css" />
+        <link href="<?php echo base_url(); ?>assets/kendo/styles/kendo.bootstrap.min.css" rel="stylesheet" type="text/css" />
+<!--        <link href="<?php echo base_url(); ?>styles/module_styles/project_management/css/plugins.css" rel="stylesheet" type="text/css" />
+        <link href="<?php echo base_url(); ?>styles/module_styles/project_management/css/workless/workless.css" rel="stylesheet" type="text/css" />
+        <link href="<?php echo base_url(); ?>styles/module_styles/project_management/css/workless/application.css" rel="stylesheet" type="text/css" />
+        <link href="<?php echo base_url(); ?>styles/module_styles/project_management/css/workless/responsive.css" rel="stylesheet" type="text/css" />-->
+<script type="text/javascript">
+	var SITE_URL					= "<?php echo rtrim(site_url(), '/').'/';?>";
+</script>
+        <?php echo $external_styles; ?>
+        
+        <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/jquery-1.10.2.min.js"></script>
+        <script type="text/javascript" src="<?php echo base_url(); ?>assets/js/jquery-migrate-1.2.1.min.js"></script>
+        <script type="text/javascript" src="<?php echo base_url(); ?>assets/jquery-ui/jquery-ui-1.10.1.custom.min.js"></script>
+<!--        <script type="text/javascript" src="<?php echo base_url(); ?>scripts/module_scripts/project_management/js/jquery/jquery.colorbox.js"></script>
+        <script type="text/javascript" src="<?php echo base_url(); ?>scripts/module_scripts/project_management/js/jquery/jquery.cooki.js"></script>
+        <script type="text/javascript" src="<?php echo base_url(); ?>scripts/module_scripts/project_management/js/jquery/jquery.slugify.js"></script>
+        <script type="text/javascript" src="<?php echo base_url(); ?>scripts/module_scripts/project_management/js/codemirror/codemirror.js"></script>
+        <script type="text/javascript" src="<?php echo base_url(); ?>scripts/module_scripts/project_management/js/codemirror/mode/css/css.js"></script>
+        <script type="text/javascript" src="<?php echo base_url(); ?>scripts/module_scripts/project_management/js/codemirror/mode/htmlmixed/htmlmixed.js"></script>
+        <script type="text/javascript" src="<?php echo base_url(); ?>scripts/module_scripts/project_management/js/codemirror/mode/javascript/javascript.js"></script>
+        <script type="text/javascript" src="<?php echo base_url(); ?>scripts/module_scripts/project_management/js/codemirror/mode/markdown/markdown.js"></script>
+        <script type="text/javascript" src="<?php echo base_url(); ?>scripts/module_scripts/project_management/js/plugins.js"></script>
+        <script type="text/javascript" src="<?php echo base_url(); ?>scripts/module_scripts/project_management/js/scripts.js"></script>-->
+        
+    </head>
+
+    <body class="fixed-top">
+        <div class="header navbar navbar-inverse navbar-fixed-top">
+            <?php echo $header_nav; ?>
+        </div>
+
+        <div class="page-container row-fluid">
+            <div class="page-sidebar nav-collapse collapse">      	
+                <?php echo $sidebar_nav; ?>
+            </div>
+
+            <div class="page-content">
+                <div id="portlet-config" class="modal hide">
+                    <div class="modal-header">
+                        <button data-dismiss="modal" class="close" type="button"></button>
+                        <h3>Widget Settings</h3>
+                    </div>
+                    <div class="modal-body">
+                        <p>Here will be a configuration form</p>
+                    </div>
+                </div>
+
+                <div class="container-fluid">
+                    <?php echo $bread_crumb; ?>
+
+                    <?php echo $content; ?>
+
+                    <div class="clearfix"></div>
+                </div>		
+            </div>
+        </div>
+
+        <div class="footer">
+            2013 &copy; Your company name goes here.
+            <div class="span pull-right">
+                <span class="go-top"><i class="icon-angle-up"></i></span>
+            </div>
+        </div>
+
+        <?php $this->carabiner->display('js'); ?>
+        <script type="text/javascript">
+            jQuery(document).ready(function() {
+                App.init();
+            });
+        </script>
+        <?php echo $external_scripts; ?>
+    </body>
+</html>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<install method="install" version="1.0.0">
+ <moduleName>project management</moduleName>
+ <moduleFolderName>project_management</moduleFolderName>
+ <author>pronab saha</author>
+ <creationDate>December 28,2013</creationDate>
+ <authorEmail>pranab_su@yahoo.com</authorEmail>
+ <authorContact></authorContact>
+ <copyright>Copyright Software Development Pro(C) 2013</copyright>
+ <license>Software Development Pro</license>
+ <module name="project management">
+  <sub name="widget" controller="widget" function="index"/>
+ </module>
+</install>

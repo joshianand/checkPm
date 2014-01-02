@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<install method="{install_method}" version="1.0.0">
+    <moduleName>{module_name}</moduleName>
+    <moduleFolderName>{module_folder}</moduleFolderName>
+    <author>{author_name}</author>
+    <creationDate>{created_date}</creationDate>
+    <authorEmail>{author_email}</authorEmail>
+    <authorContact>{author_contact}</authorContact>
+    <copyright>Copyright Software Development Pro(C) 2013</copyright>
+    <license>Software Development Pro</license>
+ 
+    
+    <controllers>
+
+    </controllers>
+
+    <libraries>
+
+    </libraries>
+    
+    <models>
+
+    </models>
+    
+    <helpers>
+        
+    </helpers>
+    
+    <views>
+        
+    </views>
+    
+    <tables>
+        
+    </tables>
+    
+    <dbdump>
+        
+    </dbdump>
+</install>

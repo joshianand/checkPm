@@ -1,0 +1,12 @@
+--SYSFRM Plug and Play Module Auto Install Driver--
+:Access=|{PRIVATE},{UseAUTH}AdminSession|;
+--PNP--
+:Name=Printer; //Module Name
+:Author=|{link}http://www.sysfrm.com|;
+:Source=|{link},{SYSFRM-REMOTE-URL}/(this)Name|;
+:MenuAppend=|<Root>|->|Modules|->|{add-last}Printer,{li}printer.EXT|; //Module Menu
+:File=|<Root>|->|lib/pnp/print/{extract}{COND}Do-Not-Replace, if [TRUE]->ShowWarning"A Modules with same name already exist",{END} [FALSE]Continue->|; //Prepare Files
+:RUN=|{SOURCE}<Module-Directory>WHERE-WHAT.php,{RUN-INLINE},{Create-Uninstall-Methods}|; //Which file to Put where and create a log which files should be removed when uninstall
+:SQL=|{SOURCE}<Module-Directory>printer.sql,{RUN-INLINE}, if [TRUE]->Push-Msg"Module installed Successfully",{RUN-INLINE}post-installation.php,{RUN-INLINE}installed.php,{END}[FALSE]Continue->|;
+:LOG=|{SOURCE}<Module-Directory>install.log,{SHOW-INLINE},{END};
+--END PNP--
