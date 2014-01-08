@@ -1,17 +1,44 @@
 <div class="search_container">
-    <div class="row-fluid">
-        <div class="span12">
-            <div class="portlet box blue">
-                <div class="portlet-title">
-                    <h4><i class="icon-cogs"></i>Search yellow page</h4>
-                    <div class="tools">
-                        <a href="javascript:;" class="collapse"></a>
+    <ul class="nav nav-tabs" id="YellowPagesSearchTab">
+        <li class="active"><a href="#SearchYellowPage">Search yellow page</a></li>
+        <li><a href="#SearchCombinations">Search Combinations</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="SearchYellowPage">
+            <div class="row-fluid">
+                <div class="span12">
+                    <div class="portlet box blue">
+                        <div class="portlet-title">
+                            <h4><i class="icon-cogs"></i>Search yellow page</h4>
+                            <div class="tools">
+                                <a href="javascript:;" class="collapse"></a>
+                            </div>
+                        </div>
+                        <div class="portlet-body">
+                            <a href="#options" role="button" class="btn btn-primary blue" data-toggle="modal" style="margin-bottom: 5px;"><i class="icon-search"></i> New search</a>
+                            <input id="csrf_portal" type="hidden" name="csrf_portal" value="<?php echo $token; ?>"/>
+                            <div id="searchGrid" class="k-content"></div>
+                        </div>
                     </div>
                 </div>
-                <div class="portlet-body">
-                    <a href="#options" role="button" class="btn btn-primary blue" data-toggle="modal" style="margin-bottom: 5px;"><i class="icon-search"></i> New search</a>
-                    <input id="csrf_portal" type="hidden" name="csrf_portal" value="<?php echo $token; ?>"/>
-                    <div id="searchGrid" class="k-content"></div>
+            </div>
+        </div>
+
+        <div class="tab-pane" id="SearchCombinations">
+            <div class="row-fluid">
+                <div class="span12">
+                    <div class="portlet box blue">
+                        <div class="portlet-title">
+                            <h4><i class="icon-cogs"></i>Search Combinations</h4>
+                            <div class="tools">
+                                <a href="javascript:;" class="collapse"></a>
+                            </div>
+                        </div>
+                        <div class="portlet-body">
+                            <input id="csrf_portal1" type="hidden" name="csrf_portal1" value="<?php echo $token; ?>"/>
+                            <div id="searchCombinationGrid" class="k-content"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -35,9 +62,14 @@
                                 <option value="<?php echo element('city_id', $city) ?>"><?php echo element('city_name', $city) . ", " . element('city_symbol', $city); ?></option>
                             <?php } ?>
                         </select>
+                        <span class="help-block">
+                            <label class="checkbox">
+                                <input type="checkbox" id="selectAllCities" name="selectAllCities" value="AllCities"> Select All Cities
+                            </label>
+                        </span>
                     </div>
                 </div>
-
+                
                 <div class="control-group">
                     <label class="control-label">Enter text</label>
                     <div class="controls">
@@ -126,4 +158,17 @@
     <div class="businessDetails"></div>
 </script>
 
+<style type="text/css">
+    #selectAllCities {
+        margin-left: 0px !important;
+        margin-right: 10px !important;
+    }
+    
+    .tab-pane {
+        min-height: 800px !important;
+    }
+</style>
+
 <?php add_script('module_scripts/lead_generator/manage.yp.search.js'); ?>
+<?php add_script('module_scripts/lead_generator/select2.js'); ?>
+<?php add_styles('module_styles/lead_generator/select2.css'); ?>

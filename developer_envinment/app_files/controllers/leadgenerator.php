@@ -107,6 +107,7 @@ class Leadgenerator extends G_Controller {
      * @author Pronab saha<pranab.su@gmail.com>
      */
     public function SaveYellowPageSearch() {
+//        $this->CronYellowPagesSearch(time());exit;
         if ($this->input->is_ajax_request()) {
             set_time_limit(0);
             ini_set('memory_limit', '1G');
@@ -116,26 +117,69 @@ class Leadgenerator extends G_Controller {
             $output_result = array();
             $output_result['flag'] = 1;
             $output_result['message'] = "Scraping done. Please click left most triangle of row to expand scrape result";
+            
+            $city_selection = array();
+            
+            if($this->input->post('citySelection', TRUE) && !$this->input->post('selectAllCities', TRUE))
+                $city_selection = $this->input->post('citySelection', TRUE);
+            else
+                $city_selection = $this->yp_model->GetAllCityIds();
+            
+            if(!empty($city_selection)) {
+                $search_text = $this->input->post('searchText', TRUE);
 
-            $city_selection = $this->input->post('citySelection', TRUE);
-            $search_text = $this->input->post('searchText', TRUE);
-            $city_name = $this->yp_model->GetCityName($city_selection);
+                if($search_text != "") {
+                    // seperate search text
+                    $search_text_array = explode(",", $search_text);
 
-            if ($this->yp_model->IsDuplicateWhatWhere($city_selection, $search_text)) {
-                $output_result['flag'] = 0;
-                $output_result['message'] = "Duplicate city and search text found. Please choose another combination";
+                    $search_combinations = array();
+
+                    foreach($city_selection as $city) {
+                        foreach($search_text_array as $serach_text) {
+                            // check whether combination is already present
+                            if (!$this->yp_model->IsDuplicateWhatWhere($city, $serach_text)) {
+                                $search_combinations[] = array(
+                                    "city_id" => $city,
+                                    "search_string" => $serach_text,
+                                    "search_status" => 0,
+                                    "added_on" => time()
+                                );
+                            }
+                        }
+                    }
+
+                    if(!empty($search_combinations)) {
+                        if (!$this->yp_model->AddSerachCombinations($search_combinations)) {
+                            $output_result['flag'] = 0;
+                            $output_result['message'] = "Some error has occurred.";
+                        }
+                    }
+
+//                            $city_name = $this->yp_model->GetCityName($city_selection);
+//
+//                            if ($this->yp_model->IsDuplicateWhatWhere($city_selection, $search_text)) {
+//                                $output_result['flag'] = 0;
+//                                $output_result['message'] = "Duplicate city and search text found. Please choose another combination";
+////                            } else {
+//                                $data = array(
+//                                    'city_id' => $city_selection,
+//                                    'city_name' => $city_name,
+//                                    'search_text' => $search_text,
+//                                    'total_business_found' => 0,
+//                                    'search_status' => 'pending',
+//                                    'modified_date' => strtotime('now')
+//                                );
+//
+//                                array_push($search_list, $data);
+//                                $this->BasicBusinessSearch($search_list);
+//                            }
+                } else {
+                    $output_result['flag'] = 0;
+                    $output_result['message'] = "Please enter search text.";
+                }
             } else {
-                $data = array(
-                    'city_id' => $city_selection,
-                    'city_name' => $city_name,
-                    'search_text' => $search_text,
-                    'total_business_found' => 0,
-                    'search_status' => 'pending',
-                    'modified_date' => strtotime('now')
-                );
-
-                array_push($search_list, $data);
-                $this->BasicBusinessSearch($search_list);
+                $output_result['flag'] = 0;
+                $output_result['message'] = "Please select any city.";
             }
             echo json_encode($output_result);
         } else {
@@ -451,12 +495,18 @@ class Leadgenerator extends G_Controller {
             $page_count = 2;
 
             $businesses = $this->yellowapi->scrap_business($what, $where, 1);
-
+            
             $listings = $businesses['details'];
             $pagination_string = $businesses['pagination_text'];
-
+            
             if (count($listings) > 0) {
-                $search_id = $this->yp_model->InsertSearchData($search);
+                $search_id = 0;
+                $search_data = $this->yp_model->GetLastBusinessSearchId($search);
+                
+                if(!empty($search_data))
+                    $search_id = $search_data["search_id"];
+                else
+                    $search_id = $this->yp_model->InsertSearchData($search);
 
                 foreach ($listings as $list) {
                     $data = array(
@@ -531,9 +581,185 @@ class Leadgenerator extends G_Controller {
                 'total_business_found' => $total_business_found,
                 'search_status' => 'completed'
             );
-
+            
             $this->yp_model->UpdateSearchData($update_data, 0, $search_id);
             $this->yp_model->InsertSearchDetailsData($business_details);
+        }
+    }
+    
+    /**
+     * <p style="text-align:justify">
+     * Search business list
+     * </p>
+     * @access public
+     * @author Pronab saha<pranab.su@gmail.com>
+     */
+    public function CronYellowPagesSearch($time = 0) {
+        if($time == 0) {
+            $time = time();
+        }
+        $search_list = array();
+        $data = $this->yp_model->GetNextSearchCombination($time);
+        
+        if(!empty($data)) {
+            if($data["process"] == "email_scraped") {
+                $this->CronScrapeEmails($data["search_data"]["search_id"]);
+                $this->CronAnalyzeSite($data["search_data"]["search_id"]);
+            } else if ($data["process"] == "site_analyzed") {
+                $this->CronAnalyzeSite($data["search_data"]["search_id"]);
+            } else {
+                $search_data = $data["search_data"];
+                $city_name = $this->yp_model->GetCityName($search_data["city_id"]);
+                
+                $list_data = array();
+                
+                if(!isset($search_data["search_id"])) {
+                    $list_data = array(
+                        'city_id' => $search_data["city_id"],
+                        'city_name' => $city_name,
+                        'search_text' => $search_data["search_string"],
+                        'total_business_found' => 0,
+                        'search_status' => 'pending',
+                        'modified_date' => strtotime('now')
+                    );
+                } else {
+                    $list_data = array(
+                        'city_id' => $search_data["city_id"],
+                        'city_name' => $city_name,
+                        'search_text' => $search_data["search_text"],
+                        'total_business_found' => 0,
+                        'search_status' => 'pending',
+                        'modified_date' => strtotime('now')
+                    );
+                }
+                
+                array_push($search_list, $list_data);
+                try{
+                    $this->BasicBusinessSearch($search_list);
+                    $this->yp_model->UpdateSearchCombinationStatus($search_data["id"], 1);
+                    $data["search_data"] = $this->yp_model->GetLastBusinessSearchId($list_data);
+                    $this->CronScrapeEmails($data["search_data"]["search_id"]);
+                    $this->CronAnalyzeSite($data["search_data"]["search_id"]);
+                }
+                catch(Exception $e){
+                    $this->yp_model->UpdateSearchCombinationStatus($search_data["id"], 0);
+                }
+            }
+        }
+    }
+    
+    /**
+     * <p style="text-align:justify">
+     * Processing scrape emails via cron job
+     * </p>
+     * @access protected
+     * @author Pronab saha<pranab.su@gmail.com>
+     */
+    protected function CronScrapeEmails($search_id = 0) {
+        if ($search_id != 0) {
+            set_time_limit(0);
+            ini_set('memory_limit', '1G');
+            libxml_use_internal_errors(true);
+
+            $output_result = array();
+            $output_result['flag'] = 1;
+            
+            $business_sites = $this->yp_model->GetBusinessWebsites($search_id);
+
+            if (count($business_sites) > 0) {
+                $total_scraped = 0;
+
+                foreach ($business_sites as $site) {
+                    $domain = $site['company_url'];
+
+                    $scrapped_emails = $this->yellowapi->scrape_emails($domain);
+                    if (is_array($scrapped_emails)) {
+                        if (count($scrapped_emails) > 1) {
+                            $contact_emails = join(',', $scrapped_emails);
+                        } else {
+                            $contact_emails = $scrapped_emails[0];
+                        }
+
+                        $this->yp_model->UpdateVerifiedEmail($site['business_id'], $contact_emails);
+                        $total_scraped += count($scrapped_emails);
+                    }
+                }
+
+                $this->yp_model->UpdateScrapeStatus($search_id);
+            } 
+        }
+    }
+    
+    /**
+     * <p style="text-align:justify">
+     * Processing site analyze via cron job
+     * </p>
+     * @access public
+     * @author Pronab saha<pranab.su@gmail.com>
+     */
+    protected function CronAnalyzeSite($search_id = 0) {
+        if ($search_id != 0) {
+            set_time_limit(0);
+            ini_set('memory_limit', '1G');
+            libxml_use_internal_errors(true);
+
+            $output_result = array();
+            $output_result['flag'] = 1;
+            
+            $business_sites = $this->yp_model->GetBusinessWebsites($search_id, FALSE);
+            if (count($business_sites) > 0) {
+                $total_analyzed = 0;
+
+                foreach ($business_sites as $site) {
+                    sleep(rand(3, 5));
+                    $domain = $site['company_url'];
+
+                    $analyzed_data = $this->yellowapi->analyze_site($domain);
+                    $this->yp_model->UpdateSiteAnalyze($site['business_id'], $analyzed_data);
+                    $total_analyzed++;
+                }
+
+                $this->yp_model->UpdateAnalyzeStatus($search_id);
+            }
+        }
+    }
+    
+    /**
+     * <p style="text-align:justify">
+     * Get search data
+     * </p>
+     * @access public
+     * @author Pronab saha<pranab.su@gmail.com>
+     */
+    public function GetSearchCombinationList() {
+        if (IS_AJAX) {
+            $limit = $this->input->get('take', TRUE);
+            $offset = $this->input->get('skip', TRUE);
+
+            $sort_data = $this->input->get('sort', TRUE);
+
+            $sort_direction = ( $sort_data[0]['dir'] == '') ? 'ASC' : $sort_data[0]['dir'];
+            $sort_field = ( $sort_data[0]['field'] == '') ? 'search_id' : $sort_data[0]['field'];
+
+            $data['search_data'] = $this->yp_model->GetSearchCombinationList($limit, $offset, $sort_direction, $sort_field);
+            $data['count'] = $this->yp_model->CountSearchCombinationList();
+
+            echo json_encode($data);
+        } else {
+            show_error('Sorry, direct access isnt allowed');
+        }
+    }
+    
+    public function DeleteSearchCombination() {
+        if (IS_AJAX) {
+            $search_id = $this->input->post('search_id', TRUE);
+            if ($this->yp_model->DeleteSearchCombination($search_id) === TRUE) {
+                echo "1*Search query deleted successfully";
+            } else {
+                echo "0*An error occur while deleting.";
+            }
+        } else {
+            show_error('Sorry, direct access isnt allowed');
         }
     }
 

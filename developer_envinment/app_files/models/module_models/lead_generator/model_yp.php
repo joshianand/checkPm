@@ -269,6 +269,23 @@ class Model_yp extends G_model{
         $query = $this->db->get();
         if ($query->num_rows() > 0) {
             foreach ($query->result_array() as $row) {
+                if($row["business_name"] != "")
+                    $row = "N/A";
+                if($row["business_category"] != "")
+                    $row = "N/A";
+                if($row["street_address"] != "")
+                    $row = "N/A";
+                if($row["city"] != "")
+                    $row = "N/A";
+                if($row["phone"] != "")
+                    $row = "N/A";
+                if($row["company_url"] != "")
+                    $row = "N/A";
+                if($row["emails"] != "")
+                    $row = "N/A";
+                if($row["average_rating"] != "")
+                    $row = "N/A";
+                
                 array_push($data, $row);
             }
         }
@@ -589,6 +606,215 @@ class Model_yp extends G_model{
         
         $this->db->trans_complete();
         return $this->db->trans_status();
+    }
+    
+    /**
+     * <p style="text-align:justify">
+     * Add search combinations for selected cities and search text
+     * </p>
+     * @access public
+     * @param array of city id and search text
+     * @return boolean Returns TRUE if succeed otherwise FALSE
+     */
+    public function AddSerachCombinations($search_combinations){
+        $this->db->trans_start();
+        
+        $this->db->insert_batch("yellow_page_search_params", $search_combinations);
+        
+        $this->db->trans_complete();
+        return $this->db->trans_status();
+    }
+    
+    /**
+     * <p style="text-align:justify">
+     * return search combination for specific time
+     * </p>
+     * @access public
+     * @param time in unixtimestamp
+     * @return array search combination
+     */
+    public function GetNextSearchCombination($time){
+        $return_data = array();
+        
+        $search_list = $this->db->order_by("search_status")
+                                ->order_by("email_scraped")
+                                ->order_by("site_analyzed")
+                                ->or_where("email_scraped", "no")
+                                ->or_where("site_analyzed", "no")
+                                ->or_where("search_status", "pending")
+                                ->from("yellow_page_search_lists")
+                                ->get()
+                                ->row_array();
+        
+        if(empty($search_list)){
+            $search_list = $this->db->order_by("added_on", "DESC")
+                                ->order_by("id")
+                                ->or_where("search_status", "0")
+                                ->or_where("processed_on", "0")
+                                ->from("yellow_page_search_params")
+                                ->get()
+                                ->row_array();
+            
+            $return_data = array(
+                "search_data" => $search_list,
+                "process" => "business"
+            );
+            
+        }
+        else{
+            $process = "";
+            if($search_list["search_status"] == "pending")
+                $process = "business";
+            else if($search_list["email_scraped"] == "no")
+                $process = "email_scraped";
+            else if($search_list["site_analyzed"] == "no" && $search_list["email_scraped"] == "yes")
+                $process = "site_analyzed";
+            
+            $return_data = array(
+                "search_data" => $search_list,
+                "process" => $process
+            );
+        }
+        
+        return $return_data;
+    }
+    
+    /**
+     * <p style="text-align:justify">
+     * return update search combination status
+     * </p>
+     * @access public
+     * @param search combination id
+     * @return boolean Returns TRUE if succeed otherwise FALSE
+     */
+    public function UpdateSearchCombinationStatus($combination_id, $status){
+        $this->db->where("id", $combination_id);
+        $this->db->update("yellow_page_search_params", 
+                    array(
+                        "search_status" => $status,
+                        "processed_on" => time()
+                        )
+                    );
+    }
+        
+    /**
+     * <p style="text-align:justify">
+     * return last search job info
+     * </p>
+     * @access public
+     * @param array search params 
+     * @return array search information 
+     */
+    public function GetLastBusinessSearchId($search_params){
+        $this->db->where("city_id", $search_params["city_id"]);
+        $this->db->where("city_name", $search_params["city_name"]);
+        $this->db->where("search_text", $search_params["search_text"]);
+        return $this->db->from("yellow_page_search_lists")->get()->row_array();        
+    }
+        
+    /**
+     * <p style="text-align:justify">
+     * return all city IDs
+     * </p>
+     * @access public
+     * @return array of city IDs
+     */
+    public function GetAllCityIds(){
+        // get all cities
+        $cities = $this->GetCities();
+        
+        $city_ids = array();
+        
+        if(!empty($cities)) {
+            foreach($cities as $city) {
+                $city_ids[] = $city["city_id"];
+            }
+        }
+        
+        return $city_ids;
+    }
+    
+    public function GetSearchCombinationList($limit = 25, $offset = 0, $sort_direction = 'desc', $sort_field = 'search_id') {
+        $data = array();
+
+        $this->db->select('yellow_page_search_lists.search_id,
+                           yellow_page_search_lists.search_status as bisuness_search_status,
+                           yellow_page_search_lists.email_scraped,
+                           yellow_page_search_lists.site_analyzed,
+                           yellow_page_search_params.id,
+                           yellow_page_search_params.search_string,
+                           yellow_page_search_params.search_status,
+                           yellow_page_search_params.added_on,
+                           yellow_page_search_params.processed_on,
+                           g_cities.city_name');
+        $this->db->from('yellow_page_search_params');
+        $this->db->join('g_cities', 'g_cities.city_id = yellow_page_search_params.city_id');
+        $this->db->join( 'yellow_page_search_lists', 'yellow_page_search_lists.city_id = yellow_page_search_params.city_id AND yellow_page_search_lists.search_text = yellow_page_search_params.search_string', 'left'
+       );
+        
+        switch ($sort_field) {
+            case 'search_id':
+                $this->db->order_by('yellow_page_search_params.id', $sort_direction);
+                break;
+
+            case 'city_name':
+                $this->db->order_by('g_cities.city_name', $sort_direction);
+                break;
+
+            case 'search_text':
+                $this->db->order_by('yellow_page_search_params.search_string', $sort_direction);
+                break;
+            
+            case 'search_status':
+                $this->db->order_by('yellow_page_search_params.search_status', $sort_direction);
+                break;
+            
+            case 'added_on':
+                $this->db->order_by('yellow_page_search_params.added_on', $sort_direction);
+                break;
+            
+            case 'processed_on':
+                $this->db->order_by('yellow_page_search_params.processed_on', $sort_direction);
+                break;
+
+            default :
+                $this->db->order_by('yellow_page_search_params.id');
+                break;
+        }
+
+        if ($limit > 0) {
+            $this->db->limit($limit, $offset);
+        }
+
+        $query = $this->db->get();
+        
+        if ($query->num_rows() > 0) {
+            foreach ($query->result_array() as $row) {
+                $row['added_on'] = date("F j,Y", $row['added_on']);
+                if($row['processed_on'] != 0)
+                    $row['processed_on'] = date("F j,Y", $row['processed_on']);
+                else
+                    $row['processed_on'] = 'NA';
+                
+                if($row['search_status'] != 0)
+                    $row['search_status'] = 'Processed';
+                else
+                    $row['search_status'] = 'Not Processed';
+                
+                array_push($data, $row);
+            }
+        }
+
+        return $data;
+    }
+    
+    public function CountSearchCombinationList(){
+        return $this->db->count_all_results('yellow_page_search_params');
+    }
+    
+    public function DeleteSearchCombination($SearchCombinationId){
+        $this->db->delete("yellow_page_search_params", array('id' => $SearchCombinationId));
+        return TRUE;
     }
 }
 

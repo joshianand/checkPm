@@ -246,7 +246,7 @@ class Installer extends G_controller {
 //        foreach ($view_files as $file) {
 //            copy($src_view_dir . $file, $dest_view_path . DIRECTORY_SEPARATOR . $file);
 //        }
-        $this->recurse_copy($src_view_dir, $dest_view_path);
+        $this->recurse_copy($src_helper_dir, $dest_helper_path);
 //        $helper_files = $this->get_files('helper', $folder_name);
 //        foreach ($helper_files as $file) {
 //            copy($src_helper_dir . $file, $dest_helper_path . DIRECTORY_SEPARATOR . $file);

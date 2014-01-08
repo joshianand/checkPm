@@ -1,141 +1,53 @@
 var search_url = base + 'leadgenerator/SaveYellowPageSearch';
 var get_search_list_url = base + 'leadgenerator/GetSearchList';
+var get_search_combination_list_url = base + 'leadgenerator/GetSearchCombinationList';
 var get_business_detail_url = base + 'leadgenerator/GetBusinessDetails';
 var scrape_email_url = base + 'leadgenerator/ScrapeEmails';
 var analyze_site_url = base + 'leadgenerator/AnalyzeSite';
 var del_search_url = base + 'leadgenerator/DeleteYellowSearch';
+var del_search_combination_url = base + 'leadgenerator/DeleteSearchCombination';
 var download_url = base + 'leadgenerator/DownloadSearchResults?search_id=';
 
 var yellow_data_grid;
+var search_combination_grid;
 
 $(document).ready(function() {
-    yellow_data_grid = $("#searchGrid").kendoGrid({
-        dataSource: {
-            transport: {
-                read: {
-                    url: get_search_list_url,
-                    dataType: "json"
-                },
-                destroy: {
-                    url: del_search_url,
-                    dataType: "json",
-                    type: "POST",
-                    data: {
-                        csrf_portal: $('#csrf_portal').val()
-                    },
-                    complete: function(jqXHR, textStatus) {
-                        var text = jqXHR.responseText;
-                        var parts = text.split('*');
-                        $("#searchGrid").data("kendoGrid").dataSource.read();
-                    },
-                    error: function(e) {
-                    }
-                }
-            },
-            schema: {
-                data: "search_data",
-                total: "count",
-                model: {
-                    id: "search_id",
-                    fields: {
-                        search_id: {
-                            editable: false,
-                            nullable: true
-                        }
-                    }
-                }
-            },
-            pageSize: 25,
-            serverPaging: true,
-            serverSorting: true
-        },
-        columns: [
-            {
-                title: "Search city",
-                field: "city_name"
-            },
-            {
-                title: "Search text",
-                field: "search_text"
-            },
-            {
-                title: "Total business",
-                field: "total_business_found"
-            },
-            {
-                title: "Search status",
-                field: "search_status"
-            },
-            {
-                title: "Email scraped",
-                field: "email_scraped"
-            },
-            {
-                title: "Site analyzed",
-                field: "site_analyzed"
-            },
-            {
-                title: "Modified date",
-                field: "modified_date",
-                width: "150px",
-                filterable: false
-            },
-            {
-                command: [
-                    {
-                        text: "Download results",
-                        click: downloadResults
-                    },
-                    {
-                        text: "Scrape emails",
-                        click: scrapeEmail
-                    },
-                    {
-                        text: "Analyze website",
-                        click: analyzeWebsite
-                    },
-                    "destroy"
-                ],
-                title: "Command",
-                width: "460px"
-            }
-        ],
-        detailTemplate: kendo.template($("#detailsTemplate").html()),
-        detailInit: detailInit,
-        editable: "inline",
-        filterable: {
-            extra: false,
-            operators: {
-                string: {
-                    startswith: "Starts with",
-                    eq: "Is equal to",
-                    neq: "Is not equal to"
-                }
-            }
-        },
-        columnMenu: true,
-        height: 600,
-        resizable: true,
-        sortable: true,
-        pageable: true
-    }).data("kendoGrid");
-    
-    $("#citySelection").select(function(){
-        
+    $("#citySelection").select2({ 
+        maximumSelectionSize: 0, 
+        width: '220px' 
     });
+    
+    $("#searchText").select2({ 
+        tags:[], 
+        width: '220px',
+        tokenSeparators: [","]
+    });
+    
+    initializeSearchList();
+
+    $('#YellowPagesSearchTab a').click(function (e) {
+        e.preventDefault();
+        $(this).tab('show');
+    })
+
+    $('#YellowPagesSearchTab a').on('shown', function (e) {
+        var active_tab = $(this).html();
+        console.log(active_tab);
+        if( active_tab.trim() == "Search yellow page"){
+            initializeSearchList();
+        } else {
+            initializeSearchCombinationList();
+        }
+    })
 });
 
 function newSearch() {
     var selectedCities = $("#citySelection option:selected").length;
-    var searchText = $("#searchText").val();
-    var selectedSearchTextArray = searchText.split(",");
     
-    if ($('#searchText').val() === '') {
-        alert('To search please select city name and provide search text');
-    } else if(selectedCities > 5){
-        alert('To search please select maximum 5 cities');
-    } else if(selectedSearchTextArray.length > 5){
-        alert('you can enter maximum 5 comma separeted world for search');
+    if(selectedCities == 0 && typeof $("#selectAllCities:checked").val() == "undefined") {
+        alert('To search please select city name');
+    } else if ($('#searchText').val() === '') {
+        alert('To search please provide search text');
     } else {
         $('#options').modal('hide');
 
@@ -168,7 +80,7 @@ function newSearch() {
 function scrapeEmail(e) {
     e.preventDefault();
     var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
-
+    
     $.ajax({
         url: scrape_email_url,
         type: 'POST',
@@ -416,6 +328,204 @@ function detailInit(e) {
             }
         },
         columnMenu: true,
+        resizable: true,
+        sortable: true,
+        pageable: true
+    }).data("kendoGrid");
+}
+
+function initializeSearchList(){
+    yellow_data_grid = $("#searchGrid").kendoGrid({
+        dataSource: {
+            transport: {
+                read: {
+                    url: get_search_list_url,
+                    dataType: "json"
+                },
+                destroy: {
+                    url: del_search_url,
+                    dataType: "json",
+                    type: "POST",
+                    data: {
+                        csrf_portal: $('#csrf_portal').val()
+                    },
+                    complete: function(jqXHR, textStatus) {
+                        var text = jqXHR.responseText;
+                        var parts = text.split('*');
+                        $("#searchGrid").data("kendoGrid").dataSource.read();
+                    },
+                    error: function(e) {
+                    }
+                }
+            },
+            schema: {
+                data: "search_data",
+                total: "count",
+                model: {
+                    id: "search_id",
+                    fields: {
+                        search_id: {
+                            editable: false,
+                            nullable: true
+                        }
+                    }
+                }
+            },
+            pageSize: 25,
+            serverPaging: true,
+            serverSorting: true
+        },
+        columns: [
+            {
+                title: "Search city",
+                field: "city_name"
+            },
+            {
+                title: "Search text",
+                field: "search_text"
+            },
+            {
+                title: "Total business",
+                field: "total_business_found"
+            },
+            {
+                title: "Search status",
+                field: "search_status"
+            },
+            {
+                title: "Email scraped",
+                field: "email_scraped"
+            },
+            {
+                title: "Site analyzed",
+                field: "site_analyzed"
+            },
+            {
+                title: "Modified date",
+                field: "modified_date",
+                width: "150px",
+                filterable: false
+            },
+            {
+                command: [
+                    {
+                        text: "Download results",
+                        click: downloadResults
+                    },
+//                    {
+//                        text: "Scrape emails",
+//                        click: scrapeEmail
+//                    },
+//                    {
+//                        text: "Analyze website",
+//                        click: analyzeWebsite
+//                    },
+                    "destroy"
+                ],
+                title: "Command",
+                width: "230px"
+            }
+        ],
+        detailTemplate: kendo.template($("#detailsTemplate").html()),
+        detailInit: detailInit,
+        editable: "inline",
+        filterable: {
+            extra: false,
+            operators: {
+                string: {
+                    startswith: "Starts with",
+                    eq: "Is equal to",
+                    neq: "Is not equal to"
+                }
+            }
+        },
+        columnMenu: true,
+        height: 600,
+        resizable: true,
+        sortable: true,
+        pageable: true
+    }).data("kendoGrid");
+}
+
+function initializeSearchCombinationList(){
+    search_combination_grid = $("#searchCombinationGrid").kendoGrid({
+        dataSource: {
+            transport: {
+                read: {
+                    url: get_search_combination_list_url,
+                    dataType: "json"
+                }
+            },
+            schema: {
+                data: "search_data",
+                total: "count",
+                model: {
+                    id: "search_id",
+                    fields: {
+                        search_id: {
+                            editable: false,
+                            nullable: true
+                        }
+                    }
+                }
+            },
+            pageSize: 20,
+            serverPaging: true,
+            serverSorting: true
+        },
+        columns: [
+            {
+                title: "Search city",
+                field: "city_name"
+            },
+            {
+                title: "Search text",
+                field: "search_string"
+            },
+            {
+                title: "Search status",
+                field: "search_status"
+            },
+            {
+                title: "Added date",
+                field: "added_on",
+                width: "150px",
+                filterable: false
+            },
+            {
+                title: "Processed date",
+                field: "processed_on",
+                width: "150px",
+                filterable: false
+            },
+            {
+                command: [
+                    {
+                        text: "Scrape emails",
+                        click: scrapeEmail
+                    },
+                    {
+                        text: "Analyze website",
+                        click: analyzeWebsite
+                    }
+                ],
+                title: "Command",
+                width: "260px"
+            }
+        ],
+        editable: "inline",
+        filterable: {
+            extra: false,
+            operators: {
+                string: {
+                    startswith: "Starts with",
+                    eq: "Is equal to",
+                    neq: "Is not equal to"
+                }
+            }
+        },
+        columnMenu: true,
+        height: 550,
         resizable: true,
         sortable: true,
         pageable: true
