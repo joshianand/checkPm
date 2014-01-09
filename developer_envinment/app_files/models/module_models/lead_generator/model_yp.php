@@ -265,26 +265,26 @@ class Model_yp extends G_model{
         if ($limit > 0) {
             $this->db->limit($limit, $offset);
         }
-
+        
         $query = $this->db->get();
         if ($query->num_rows() > 0) {
             foreach ($query->result_array() as $row) {
-                if($row["business_name"] != "")
-                    $row = "N/A";
-                if($row["business_category"] != "")
-                    $row = "N/A";
-                if($row["street_address"] != "")
-                    $row = "N/A";
-                if($row["city"] != "")
-                    $row = "N/A";
-                if($row["phone"] != "")
-                    $row = "N/A";
-                if($row["company_url"] != "")
-                    $row = "N/A";
-                if($row["emails"] != "")
-                    $row = "N/A";
-                if($row["average_rating"] != "")
-                    $row = "N/A";
+                if($row["business_name"] == "")
+                    $row["business_name"] = "N/A";
+                if($row["business_category"] == "")
+                    $row["business_category"] = "N/A";
+                if($row["street_address"] == "")
+                    $row["street_address"] = "N/A";
+                if($row["city"] == "")
+                    $row["city"] = "N/A";
+                if($row["phone"] == "")
+                    $row["phone"] = "N/A";
+                if($row["company_url"] == "")
+                    $row["company_url"] = "N/A";
+                if($row["emails"] == "")
+                    $row["emails"] = "N/A";
+                if($row["average_rating"] == "")
+                    $row["average_rating"] = "N/A";
                 
                 array_push($data, $row);
             }
@@ -636,13 +636,15 @@ class Model_yp extends G_model{
     public function GetNextSearchCombination($time){
         $return_data = array();
         
-        $search_list = $this->db->order_by("search_status")
+        $search_list = $this->db->select("yellow_page_search_lists.*, yellow_page_search_params.id")
+                                ->order_by("search_status")
                                 ->order_by("email_scraped")
                                 ->order_by("site_analyzed")
                                 ->or_where("email_scraped", "no")
                                 ->or_where("site_analyzed", "no")
                                 ->or_where("search_status", "pending")
                                 ->from("yellow_page_search_lists")
+                                ->join('yellow_page_search_params', 'yellow_page_search_params.city_id = yellow_page_search_lists.city_id AND yellow_page_search_params.search_string = yellow_page_search_lists.search_text', 'left')
                                 ->get()
                                 ->row_array();
         
@@ -749,8 +751,7 @@ class Model_yp extends G_model{
                            g_cities.city_name');
         $this->db->from('yellow_page_search_params');
         $this->db->join('g_cities', 'g_cities.city_id = yellow_page_search_params.city_id');
-        $this->db->join( 'yellow_page_search_lists', 'yellow_page_search_lists.city_id = yellow_page_search_params.city_id AND yellow_page_search_lists.search_text = yellow_page_search_params.search_string', 'left'
-       );
+        $this->db->join('yellow_page_search_lists', 'yellow_page_search_lists.city_id = yellow_page_search_params.city_id AND yellow_page_search_lists.search_text = yellow_page_search_params.search_string', 'left');
         
         switch ($sort_field) {
             case 'search_id':

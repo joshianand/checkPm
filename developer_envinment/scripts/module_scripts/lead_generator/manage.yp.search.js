@@ -32,7 +32,6 @@ $(document).ready(function() {
 
     $('#YellowPagesSearchTab a').on('shown', function (e) {
         var active_tab = $(this).html();
-        console.log(active_tab);
         if( active_tab.trim() == "Search yellow page"){
             initializeSearchList();
         } else {
@@ -528,6 +527,19 @@ function initializeSearchCombinationList(){
         height: 550,
         resizable: true,
         sortable: true,
-        pageable: true
+        pageable: true,
+        dataBound: function() {
+            var grid_data = this.dataSource.data();
+            for(var i = 0; i< grid_data.length; i++) {
+                if(grid_data[i]["email_scraped"] == "yes") {
+                    $('tr[data-uid="'+grid_data[i]["uid"]+'"]').find(".k-grid-Scrapeemails").remove();
+                }
+                if(grid_data[i]["site_analyzed"] == "yes") {
+                    $('tr[data-uid="'+grid_data[i]["uid"]+'"]').find(".k-grid-Analyzewebsite").remove();
+                }
+            }
+        }
     }).data("kendoGrid");
+    
+    
 }
