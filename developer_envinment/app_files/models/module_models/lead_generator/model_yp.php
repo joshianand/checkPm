@@ -637,12 +637,12 @@ class Model_yp extends G_model{
         $return_data = array();
         
         $search_list = $this->db->select("yellow_page_search_lists.*, yellow_page_search_params.id")
-                                ->order_by("search_status")
-                                ->order_by("email_scraped")
-                                ->order_by("site_analyzed")
-                                ->or_where("email_scraped", "no")
-                                ->or_where("site_analyzed", "no")
-                                ->or_where("search_status", "pending")
+                                ->order_by("yellow_page_search_lists.search_status")
+                                ->order_by("yellow_page_search_lists.email_scraped")
+                                ->order_by("yellow_page_search_lists.site_analyzed")
+                                ->or_where("yellow_page_search_lists.email_scraped", "no")
+                                ->or_where("yellow_page_search_lists.site_analyzed", "no")
+                                ->or_where("yellow_page_search_lists.search_status", "pending")
                                 ->from("yellow_page_search_lists")
                                 ->join('yellow_page_search_params', 'yellow_page_search_params.city_id = yellow_page_search_lists.city_id AND yellow_page_search_params.search_string = yellow_page_search_lists.search_text', 'left')
                                 ->get()

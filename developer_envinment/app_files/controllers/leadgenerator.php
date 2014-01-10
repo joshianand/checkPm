@@ -598,6 +598,10 @@ class Leadgenerator extends G_Controller {
         if($time == 0) {
             $time = time();
         }
+        
+        set_time_limit(0);
+        ini_set('memory_limit', '1G');
+        
         $search_list = array();
         $data = $this->yp_model->GetNextSearchCombination($time);
         
