@@ -219,7 +219,7 @@ class Yellowapi {
                 if ($rank_tag) {
                     $score = $rank_tag->plaintext;
                     preg_match_all('!\d+!', $score, $matches);
-                    $analyzed_data['seo_score'] = issset($matches[0][0])?$matches[0][0]:"";
+                    $analyzed_data['seo_score'] = isset($matches[0][0])?$matches[0][0]:"";
                 }
             }
 

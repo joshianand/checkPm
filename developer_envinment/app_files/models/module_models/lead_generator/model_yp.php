@@ -636,17 +636,30 @@ class Model_yp extends G_model{
     public function GetNextSearchCombination($time){
         $return_data = array();
         
-        $search_list = $this->db->select("yellow_page_search_lists.*, yellow_page_search_params.id")
-                                ->order_by("yellow_page_search_lists.search_status")
-                                ->order_by("yellow_page_search_lists.email_scraped")
-                                ->order_by("yellow_page_search_lists.site_analyzed")
-                                ->or_where("yellow_page_search_lists.email_scraped", "no")
-                                ->or_where("yellow_page_search_lists.site_analyzed", "no")
-                                ->or_where("yellow_page_search_lists.search_status", "pending")
-                                ->from("yellow_page_search_lists")
-                                ->join('yellow_page_search_params', 'yellow_page_search_params.city_id = yellow_page_search_lists.city_id AND yellow_page_search_params.search_string = yellow_page_search_lists.search_text', 'left')
-                                ->get()
-                                ->row_array();
+        $search_query = "SELECT 
+                            ypsl.*, 
+                            ypsp.id 
+                            
+                        FROM
+                            yellow_page_search_lists ypsl
+                            
+                        LEFT JOIN 
+                            yellow_page_search_params ypsp ON ypsp.city_id = ypsl.city_id AND ypsp.search_string = ypsl.search_text
+                         
+                        WHERE
+                            ((ypsl.email_scraped =  'no' AND ypsl.email_scraped_status < 2) OR 
+                            (ypsl.site_analyzed =  'no' AND ypsl.site_analyzed_status < 2)) AND 
+                            (ypsl.search_status =  'pending' AND ypsl.business_search_status < 2) 
+                            
+                        ORDER BY 
+                            ypsl.business_search_status DESC,
+                            ypsl.site_analyzed_status DESC,
+                            ypsl.email_scraped_status DESC,
+                            ypsl.search_status, 
+                            ypsl.email_scraped, 
+                            ypsl.site_analyzed";
+        
+        $search_list = $this->db->query($search_query)->row_array();
         
         if(empty($search_list)){
             $search_list = $this->db->order_by("added_on", "DESC")
@@ -816,6 +829,18 @@ class Model_yp extends G_model{
     public function DeleteSearchCombination($SearchCombinationId){
         $this->db->delete("yellow_page_search_params", array('id' => $SearchCombinationId));
         return TRUE;
+    }
+    
+    public function UpdateSearchRepeatStatus($column, $search_id){
+        $sql = "UPDATE 
+                    yellow_page_search_lists 
+                SET
+                    ".$column." = ".$column."+1
+                WHERE
+                    ".$column." < 2 AND
+                    search_id = ".$search_id;
+        
+        $this->db->query($sql);
     }
 }
 

@@ -507,6 +507,8 @@ class Leadgenerator extends G_Controller {
                     $search_id = $search_data["search_id"];
                 else
                     $search_id = $this->yp_model->InsertSearchData($search);
+                
+                $this->yp_model->UpdateSearchRepeatStatus('business_search_status', $search_id);exit;
 
                 foreach ($listings as $list) {
                     $data = array(
@@ -607,9 +609,14 @@ class Leadgenerator extends G_Controller {
         
         if(!empty($data)) {
             if($data["process"] == "email_scraped") {
+                $this->yp_model->UpdateSearchRepeatStatus('email_scraped_status', $search_id);
                 $this->CronScrapeEmails($data["search_data"]["search_id"]);
+
+                $this->yp_model->UpdateSearchRepeatStatus('site_analyzed_status', $search_id);
                 $this->CronAnalyzeSite($data["search_data"]["search_id"]);
+                
             } else if ($data["process"] == "site_analyzed") {
+                $this->yp_model->UpdateSearchRepeatStatus('site_analyzed_status', $search_id);
                 $this->CronAnalyzeSite($data["search_data"]["search_id"]);
             } else {
                 $search_data = $data["search_data"];
@@ -642,7 +649,11 @@ class Leadgenerator extends G_Controller {
                     $this->BasicBusinessSearch($search_list);
                     $this->yp_model->UpdateSearchCombinationStatus($search_data["id"], 1);
                     $data["search_data"] = $this->yp_model->GetLastBusinessSearchId($list_data);
+                    
+                    $this->yp_model->UpdateSearchRepeatStatus('email_scraped_status', $search_id);
                     $this->CronScrapeEmails($data["search_data"]["search_id"]);
+                    
+                    $this->yp_model->UpdateSearchRepeatStatus('site_analyzed_status', $search_id);
                     $this->CronAnalyzeSite($data["search_data"]["search_id"]);
                 }
                 catch(Exception $e){
