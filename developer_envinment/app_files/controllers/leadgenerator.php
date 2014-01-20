@@ -27,6 +27,7 @@ class Leadgenerator extends G_Controller {
         parent::__construct(get_class());
 
         $this->load->model('module_models/lead_generator/Model_yp', 'yp_model');
+        $this->load->model('module_models/lead_generator/Model_setting', 'setting_model');
         $this->load->library(array(
             'excel',
             'module_libraries/lead_generator/yellowapi'
@@ -41,6 +42,7 @@ class Leadgenerator extends G_Controller {
     public function index() {
         $page_data['token'] = $this->token;
         $page_data['cities'] = $this->yp_model->getCities();
+        $this->page_title = "Lead Generator";
         $this->construct_ui();
         $this->template->write_view('content', 'module_views/lead_generator/index', $page_data);
         $this->template->render();
@@ -111,20 +113,20 @@ class Leadgenerator extends G_Controller {
         if ($this->input->is_ajax_request()) {
             set_time_limit(0);
             ini_set('memory_limit', '1G');
-
+            
             $search_list = array();
 
             $output_result = array();
             $output_result['flag'] = 1;
             $output_result['message'] = "Scraping done. Please click left most triangle of row to expand scrape result";
-            
+
             $city_selection = array();
-            
+
             if($this->input->post('citySelection', TRUE) && !$this->input->post('selectAllCities', TRUE))
                 $city_selection = $this->input->post('citySelection', TRUE);
             else
                 $city_selection = $this->yp_model->GetAllCityIds();
-            
+
             if(!empty($city_selection)) {
                 $search_text = $this->input->post('searchText', TRUE);
 
@@ -508,7 +510,7 @@ class Leadgenerator extends G_Controller {
                 else
                     $search_id = $this->yp_model->InsertSearchData($search);
                 
-                $this->yp_model->UpdateSearchRepeatStatus('business_search_status', $search_id);exit;
+                $this->yp_model->UpdateSearchRepeatStatus('business_search_status', $search_id);
 
                 foreach ($listings as $list) {
                     $data = array(
@@ -603,61 +605,66 @@ class Leadgenerator extends G_Controller {
         
         set_time_limit(0);
         ini_set('memory_limit', '1G');
-        
-        $search_list = array();
-        $data = $this->yp_model->GetNextSearchCombination($time);
-        
-        if(!empty($data)) {
-            if($data["process"] == "email_scraped") {
-                $this->yp_model->UpdateSearchRepeatStatus('email_scraped_status', $search_id);
-                $this->CronScrapeEmails($data["search_data"]["search_id"]);
 
-                $this->yp_model->UpdateSearchRepeatStatus('site_analyzed_status', $search_id);
-                $this->CronAnalyzeSite($data["search_data"]["search_id"]);
-                
-            } else if ($data["process"] == "site_analyzed") {
-                $this->yp_model->UpdateSearchRepeatStatus('site_analyzed_status', $search_id);
-                $this->CronAnalyzeSite($data["search_data"]["search_id"]);
-            } else {
-                $search_data = $data["search_data"];
-                $city_name = $this->yp_model->GetCityName($search_data["city_id"]);
-                
-                $list_data = array();
-                
-                if(!isset($search_data["search_id"])) {
-                    $list_data = array(
-                        'city_id' => $search_data["city_id"],
-                        'city_name' => $city_name,
-                        'search_text' => $search_data["search_string"],
-                        'total_business_found' => 0,
-                        'search_status' => 'pending',
-                        'modified_date' => strtotime('now')
-                    );
-                } else {
-                    $list_data = array(
-                        'city_id' => $search_data["city_id"],
-                        'city_name' => $city_name,
-                        'search_text' => $search_data["search_text"],
-                        'total_business_found' => 0,
-                        'search_status' => 'pending',
-                        'modified_date' => strtotime('now')
-                    );
-                }
-                
-                array_push($search_list, $list_data);
-                try{
-                    $this->BasicBusinessSearch($search_list);
-                    $this->yp_model->UpdateSearchCombinationStatus($search_data["id"], 1);
-                    $data["search_data"] = $this->yp_model->GetLastBusinessSearchId($list_data);
-                    
-                    $this->yp_model->UpdateSearchRepeatStatus('email_scraped_status', $search_id);
+        if($this->setting_model->runCron()){
+            // set cron time to current time
+            $this->setting_model->updateCronTime();
+            
+            $search_list = array();
+            $data = $this->yp_model->GetNextSearchCombination($time);
+
+            if(!empty($data["search_data"])) {
+                if($data["process"] == "email_scraped") {
+                    $this->yp_model->UpdateSearchRepeatStatus('email_scraped_status', $data["search_data"]["search_id"]);
                     $this->CronScrapeEmails($data["search_data"]["search_id"]);
-                    
-                    $this->yp_model->UpdateSearchRepeatStatus('site_analyzed_status', $search_id);
+
+                    $this->yp_model->UpdateSearchRepeatStatus('site_analyzed_status', $data["search_data"]["search_id"]);
                     $this->CronAnalyzeSite($data["search_data"]["search_id"]);
-                }
-                catch(Exception $e){
-                    $this->yp_model->UpdateSearchCombinationStatus($search_data["id"], 0);
+
+                } else if ($data["process"] == "site_analyzed") {
+                    $this->yp_model->UpdateSearchRepeatStatus('site_analyzed_status', $data["search_data"]["search_id"]);
+                    $this->CronAnalyzeSite($data["search_data"]["search_id"]);
+                } else {
+                    $search_data = $data["search_data"];
+                    $city_name = $this->yp_model->GetCityName($search_data["city_id"]);
+
+                    $list_data = array();
+
+                    if(!isset($search_data["search_id"])) {
+                        $list_data = array(
+                            'city_id' => $search_data["city_id"],
+                            'city_name' => $city_name,
+                            'search_text' => $search_data["search_string"],
+                            'total_business_found' => 0,
+                            'search_status' => 'pending',
+                            'modified_date' => strtotime('now')
+                        );
+                    } else {
+                        $list_data = array(
+                            'city_id' => $search_data["city_id"],
+                            'city_name' => $city_name,
+                            'search_text' => $search_data["search_text"],
+                            'total_business_found' => 0,
+                            'search_status' => 'pending',
+                            'modified_date' => strtotime('now')
+                        );
+                    }
+
+                    array_push($search_list, $list_data);
+                    try{
+                        $this->BasicBusinessSearch($search_list);
+                        $this->yp_model->UpdateSearchCombinationStatus($search_data["id"], 1);
+                        $data["search_data"] = $this->yp_model->GetLastBusinessSearchId($list_data);
+
+                        $this->yp_model->UpdateSearchRepeatStatus('email_scraped_status', $data["search_data"]["search_id"]);
+                        $this->CronScrapeEmails($data["search_data"]["search_id"]);
+
+                        $this->yp_model->UpdateSearchRepeatStatus('site_analyzed_status', $data["search_data"]["search_id"]);
+                        $this->CronAnalyzeSite($data["search_data"]["search_id"]);
+                    }
+                    catch(Exception $e){
+                        $this->yp_model->UpdateSearchCombinationStatus($search_data["id"], 0);
+                    }
                 }
             }
         }

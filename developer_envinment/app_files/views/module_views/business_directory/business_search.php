@@ -3,7 +3,7 @@
         <div class="span12">
             <div class="portlet box blue">
                 <div class="portlet-title">
-                    <h4><i class="icon-cogs"></i>Search page</h4>
+                    <h4><i class="icon-cogs"></i>Business Directory</h4>
                     <div class="tools">
                         <a href="javascript:;" class="collapse"></a>
                     </div>
@@ -21,7 +21,7 @@
     <div id="options" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel1" aria-hidden="true" style="display: none;">
         <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
-            <h3 id="myModalLabel1">New search</h3>
+            <h3 id="myModalLabel1">Search</h3>
         </div>
 
         <div class="modal-body">
@@ -40,7 +40,14 @@
                 </div>
                 
                 <div class="control-group">
-                    <label class="control-label">Enter text</label>
+                    <label class="control-label"></label>
+                    <div class="controls">
+                        <span class="label">And / Or</span>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">Business Services (Keyword)</label>
                     <div class="controls">
                         <input type="text" value="" id="searchText" name="searchText">
                     </div>
@@ -138,6 +145,6 @@
     }
 </style>
 
-<?php add_script('module_scripts/lead_generator/manage.business.search.js'); ?>
+<?php add_script('module_scripts/business_directory/manage.business.search.js'); ?>
 <?php add_script('module_scripts/lead_generator/select2.js'); ?>
 <?php add_styles('module_styles/lead_generator/select2.css'); ?>

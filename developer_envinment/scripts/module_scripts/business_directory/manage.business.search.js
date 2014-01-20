@@ -288,7 +288,7 @@ function initializeSearchList(_city, _searchText){
                 field: "search_status"
             },
             {
-                title: "Email scraped",
+                title: "Email",
                 field: "email_scraped"
             },
             {

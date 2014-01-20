@@ -647,8 +647,8 @@ class Model_yp extends G_model{
                             yellow_page_search_params ypsp ON ypsp.city_id = ypsl.city_id AND ypsp.search_string = ypsl.search_text
                          
                         WHERE
-                            ((ypsl.email_scraped =  'no' AND ypsl.email_scraped_status < 2) OR 
-                            (ypsl.site_analyzed =  'no' AND ypsl.site_analyzed_status < 2)) AND 
+                            (ypsl.email_scraped =  'no' AND ypsl.email_scraped_status < 2) OR 
+                            (ypsl.site_analyzed =  'no' AND ypsl.site_analyzed_status < 2) OR 
                             (ypsl.search_status =  'pending' AND ypsl.business_search_status < 2) 
                             
                         ORDER BY 

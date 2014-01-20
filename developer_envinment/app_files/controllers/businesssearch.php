@@ -9,7 +9,7 @@ class Businesssearch extends G_Controller {
         parent::__construct(get_class());
 
         $this->load->model('module_models/lead_generator/Model_yp', 'yp_model');
-        $this->load->model('module_models/lead_generator/Model_business_search', 'bs_model');
+        $this->load->model('module_models/business_directory/Model_business_search', 'bs_model');
         $this->load->library(array(
             'excel',
             'module_libraries/lead_generator/yellowapi'
@@ -24,8 +24,10 @@ class Businesssearch extends G_Controller {
     public function index() {
         $page_data['token'] = $this->token;
         $page_data['cities'] = $this->yp_model->getCities();
+        $this->page_title = "Business Directory";
+        
         $this->construct_ui();
-        $this->template->write_view('content', 'module_views/lead_generator/business_search', $page_data);
+        $this->template->write_view('content', 'module_views/business_directory/business_search', $page_data);
         $this->template->render();
     }
     

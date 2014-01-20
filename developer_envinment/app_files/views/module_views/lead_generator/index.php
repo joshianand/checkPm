@@ -1,7 +1,7 @@
 <div class="search_container">
     <ul class="nav nav-tabs" id="YellowPagesSearchTab">
-        <li class="active"><a href="#SearchYellowPage">Search yellow page</a></li>
-        <li><a href="#SearchCombinations">Search Combinations</a></li>
+        <li class="active"><a href="#SearchYellowPage">Lead Generator</a></li>
+        <li><a href="#SearchCombinations">Lead Combinations</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="SearchYellowPage">
@@ -9,7 +9,7 @@
                 <div class="span12">
                     <div class="portlet box blue">
                         <div class="portlet-title">
-                            <h4><i class="icon-cogs"></i>Search yellow page</h4>
+                            <h4><i class="icon-cogs"></i>Lead Generator</h4>
                             <div class="tools">
                                 <a href="javascript:;" class="collapse"></a>
                             </div>
